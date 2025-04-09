@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Documentation | Gesture Recognition</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <style>
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      margin: 0;
+    }
+
+    .navbar {
+      background-color: #1e293b;
+      padding: 12px 24px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-logo {
+      font-size: 20px;
+      font-weight: bold;
+      color: #f8fafc;
+      text-decoration: none;
+    }
+
+    .nav-logo span {
+      color: #3b82f6;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 20px;
+    }
+
+    .nav-link {
+      color: #f8fafc;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      color: #3b82f6;
+    }
+
+    .main-content {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    h1 {
+      font-size: 32px;
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      width: 60px;
+      height: 3px;
+      background-color: #3b82f6;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .doc-section {
+      background-color: #1e293b;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+      margin-bottom: 30px;
+    }
+
+    .doc-section h2 {
+      font-size: 22px;
+      margin-bottom: 12px;
+      color: #facc15;
+    }
+
+    .doc-section p, .doc-section ul, .doc-section code {
+      font-size: 16px;
+      line-height: 1.7;
+      color: #e2e8f0;
+    }
+
+    .doc-section code {
+      background-color: #334155;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-family: monospace;
+    }
+
+    .doc-section ul {
+      padding-left: 20px;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 24px;
+      }
+      .nav-links {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="nav-logo"><span>✋</span> Gesture Recognition</a>
+      <ul class="nav-links">
+        <li><a href="/" class="nav-link">Home</a></li>
+        <li><a href="/about" class="nav-link">About</a></li>
+        <li><a href="/documentation" class="nav-link active">Documentation</a></li>
+        <li><a href="/contact" class="nav-link">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <h1>Project Documentation</h1>
+
+    <div class="doc-section">
+      <h2>🧠 Overview</h2>
+      <p>
+        This web app uses computer vision and machine learning to detect hand gestures from live webcam input or uploaded images. The system processes frames in real-time and classifies them into pre-trained categories using a CNN model.
+      </p>
+    </div>
+
+    <div class="doc-section">
+      <h2>⚙️ Tech Stack</h2>
+      <ul>
+        <li><strong>Frontend:</strong> HTML, CSS, JavaScript</li>
+        <li><strong>Backend:</strong> Python (Flask)</li>
+        <li><strong>Libraries:</strong> OpenCV, TensorFlow/Keras, NumPy,Sklearn and MediaPipe</li>
+        <li><strong>Model:</strong> Dense Neural Network(MLP)</li>
+        
+      </ul>
+    </div>
+
+    <div class="doc-section">
+      <h2>📂 Folder Structure</h2>
+      <ul>
+        <li><code>/static</code> — CSS, JS, image assets</li>
+        <li><code>/templates</code> — HTML pages</li>
+        <li><code>app.py</code> — Main Flask server</li>
+        <li><code>model.h5</code> — Trained gesture recognition model</li>
+      </ul>
+    </div>
+
+    <div class="doc-section">
+      <h2>📸 How to Use</h2>
+      <ul>
+        <li>Open the homepage.</li>
+        <li>Allow camera access if prompted.</li>
+        <li>Make a hand gesture in front of the camera.</li>
+        <li>See the predicted output on screen.</li>
+        <li>You can also upload images manually.</li>
+      </ul>
+    </div>
+
+    <div class="doc-section">
+      <h2>🚀 Run the Project Locally</h2>
+      <p>Make sure Python is installed. Then run:</p>
+      <pre><code>pip install -r requirements.txt
+python app.py</code></pre>
+      <p>Open <code>http://127.0.0.1:5000</code> in your browser.</p>
+    </div>
+
+    <div class="doc-section">
+      <h2>📌 Note</h2>
+      <p>
+        For optimal results, ensure proper lighting and gesture visibility in front of the camera.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
