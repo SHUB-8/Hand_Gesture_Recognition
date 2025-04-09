@@ -493,7 +493,7 @@
         <li><a href="/" class="nav-link active">Home</a></li>
         <li><a href="/about" class="nav-link">About</a></li>
         <li><a href="/documentation" class="nav-link">Documentation</a></li>
-         <li><a href="/contact" class="nav-link">Contact</a></li>
+        <li><a href="/contact" class="nav-link">Contact</a></li>
       </ul>
     </div>
   </nav>
@@ -505,7 +505,9 @@
         {% for gesture in gestures %}
         <div class="gesture-item">
           <div class="gesture-image-container">
-            <img src="{{ url_for('static', filename='abcd/' + gesture.folder + '/' + gesture.image) }}" alt="{{ gesture.name }}">
+            <!-- Fixed image path -->
+            <img src="{{ url_for('static', filename='ref_images/' + gesture.folder + '/' + gesture.image) }}" 
+                 alt="{{ gesture.name }}">
           </div>
           <div class="gesture-label">{{ gesture.name }}</div>
         </div>
