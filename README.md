@@ -11,6 +11,7 @@ This project allows real-time hand gesture recognition using MediaPipe and Tenso
 If you don't have Python 3.11 installed, you can install it using the following methods:
 
 #### Option 1: Using pyenv (Recommended)
+
 1. **Install pyenv**:
    - Follow the instructions to install `pyenv` from the [official pyenv GitHub page](https://github.com/pyenv/pyenv).
    
@@ -104,15 +105,8 @@ Missing Dependencies: If you run into issues with missing dependencies, make sur
 License
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-yaml
+pgsql
 Copy
 Edit
 
----
-
-### Summary of Key Points:
-- Clear instructions to set up Python 3.11.
-- Instructions to create and activate a virtual environment.
-- Easy installation of dependencies via `requirements.txt`.
-- Explanation of how to run the project (Flask or FastAPI).
-  
+This version of the `README.md` file has **all sections** properly formatted with markdown syntax. You
