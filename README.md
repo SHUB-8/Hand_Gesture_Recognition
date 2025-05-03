@@ -116,4 +116,3 @@ Edit
 - Easy installation of dependencies via `requirements.txt`.
 - Explanation of how to run the project (Flask or FastAPI).
   
-This README should help users set up the project, install dependencies, and troubleshoot common issue
