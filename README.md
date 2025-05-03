@@ -1,21 +1,21 @@
 
-# ✋ Hand Gesture Recognition Project
+# Hand Gesture Recognition Project
 
 This project enables real-time hand gesture recognition using **MediaPipe** and **TensorFlow**, with a **Flask** or **FastAPI** backend. The system supports both **webcam-based live detection** and **image-based recognition**.
 
 ---
 
-## 📦 Prerequisites
+## Prerequisites
 
 - **Python 3.11.x** (Recommended: 3.11.9 for full compatibility with all dependencies)
 
 ---
 
-## ⚙️ Setting Up Python 3.11.x
+## ⚙Setting Up Python 3.11.x
 
 If you don’t already have Python 3.11 installed, follow one of the methods below:
 
-### ✅ Option 1: Using `pyenv` (Recommended)
+### Option 1: Using `pyenv` (Recommended)
 
 1. Install `pyenv`:
    Follow the instructions from the [official pyenv GitHub page](https://github.com/pyenv/pyenv).
@@ -27,7 +27,7 @@ If you don’t already have Python 3.11 installed, follow one of the methods bel
    pyenv global 3.11.9
    ```
 
-### ✅ Option 2: Using Conda
+### Option 2: Using Conda
 
 1. Download and install [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [Anaconda](https://www.anaconda.com/).
 
@@ -40,15 +40,15 @@ If you don’t already have Python 3.11 installed, follow one of the methods bel
 
 ---
 
-## 🚀 Setting Up the Project
+## Setting Up the Project
 
 Once Python 3.11.x is ready, follow these steps:
 
 ### 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/gesture-recognition.git
-cd gesture-recognition
+git clone https://github.com/SHUB-8/PBL-SE.git
+cd PBL-SE
 ```
 
 ### 2. Create a virtual environment:
@@ -76,11 +76,11 @@ pip install -r requirements.txt
 
 ---
 
-## 🏃 Running the Project
+## Running the Project
 
 After installing the dependencies, run the application using one of the following:
 
-### 🌱 Flask Version
+### Flask Version
 
 ```bash
 flask run
@@ -88,7 +88,7 @@ flask run
 
 - Open in browser: [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
-### ⚡ FastAPI Version (Recommended for real-time webcam + image recognition)
+### FastAPI Version (Recommended for real-time webcam + image recognition)
 
 ```bash
 uvicorn app:app --reload
@@ -98,13 +98,13 @@ uvicorn app:app --reload
 
 ---
 
-## 🧪 Testing the Application
+## Testing the Application
 
 Once the server is running, open the web app in your browser. The app will use your webcam to perform **live gesture recognition** in real time.
 
 ---
 
-## 📚 Project Dependencies
+## Project Dependencies
 
 All required Python packages are listed in `requirements.txt`. Key packages include:
 
@@ -119,7 +119,7 @@ scipy==1.10.1
 
 ---
 
-## 🛠️ Troubleshooting
+## 🛠Troubleshooting
 
 - Make sure you are using **Python 3.11.x** as specified.
 - Always activate your virtual environment before installing dependencies.
