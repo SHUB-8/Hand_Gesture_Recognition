@@ -1,12 +1,12 @@
 {
   "files": {
-    "main.js": "/Hand_Gesture_Recognition/static/js/main.5291e835.js",
+    "main.js": "/Hand_Gesture_Recognition/static/js/main.851c0a06.js",
     "static/js/453.670e15c7.chunk.js": "/Hand_Gesture_Recognition/static/js/453.670e15c7.chunk.js",
     "index.html": "/Hand_Gesture_Recognition/index.html",
-    "main.5291e835.js.map": "/Hand_Gesture_Recognition/static/js/main.5291e835.js.map",
+    "main.851c0a06.js.map": "/Hand_Gesture_Recognition/static/js/main.851c0a06.js.map",
     "453.670e15c7.chunk.js.map": "/Hand_Gesture_Recognition/static/js/453.670e15c7.chunk.js.map"
   },
   "entrypoints": [
-    "static/js/main.5291e835.js"
+    "static/js/main.851c0a06.js"
   ]
 }
