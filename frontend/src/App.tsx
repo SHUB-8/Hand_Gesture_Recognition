@@ -10,6 +10,7 @@ function App() {
   const [imagePrediction, setImagePrediction] = useState('');
   const [isRecognizing, setIsRecognizing] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const handTrackerRef = useRef<HandTracker | null>(null);
 
   useEffect(() => {
@@ -18,6 +19,7 @@ function App() {
     });
 
     socket.on('prediction', (data) => {
+      console.log('Received prediction:', data.prediction); // Log received prediction
       setPrediction(data.prediction);
     });
 
@@ -31,8 +33,9 @@ function App() {
   }, []);
 
   const startGestureRecognition = () => {
-    if (videoRef.current) {
-      handTrackerRef.current?.start(videoRef.current, (features, numHands) => {
+    if (videoRef.current && canvasRef.current) {
+      videoRef.current.play(); // Ensure video playback
+      handTrackerRef.current?.start(videoRef.current, canvasRef.current, (features, numHands) => {
         if (numHands === 1) {
           socket.emit('features', features);
         } else {
@@ -83,7 +86,10 @@ function App() {
             <Typography variant="h5" gutterBottom>
               Real-time Recognition
             </Typography>
-            <video ref={videoRef} width="100%" height="auto" autoPlay playsInline muted></video>
+            <div style={{ position: 'relative', width: '100%', height: 'auto' }}>
+              <video ref={videoRef} style={{ width: '100%', height: 'auto' }} autoPlay playsInline muted></video>
+              <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}></canvas>
+            </div>
             <Button variant="contained" onClick={startGestureRecognition} sx={{ mr: 1 }} disabled={isRecognizing}>
               Start
             </Button>

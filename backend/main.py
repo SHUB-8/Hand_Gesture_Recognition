@@ -8,8 +8,17 @@ from pydantic import BaseModel
 from typing import List
 
 app = fastapi.FastAPI()
-sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
-socket_app = socketio.ASGIApp(sio, app)
+sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=[]) # Set to empty list
+
+# Create the ASGI application that includes both FastAPI and Socket.IO
+# Apply CORS middleware directly to the ASGI application
+socket_app = CORSMiddleware(
+    socketio.ASGIApp(sio, app),
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class Features(BaseModel):
     features: List[float]

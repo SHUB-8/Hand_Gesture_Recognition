@@ -2,6 +2,6 @@ fastapi
 uvicorn[standard]
 python-socketio
 numpy
-tensorflow-lite
+tensorflow
 scikit-learn
 python-multipart
