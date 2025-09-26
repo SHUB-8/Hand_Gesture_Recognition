@@ -2,7 +2,13 @@
 
 This is a full-stack application that uses machine learning to recognize hand gestures in real-time from a webcam or a static image. The frontend is built with **React, TypeScript, and Vite**, and the backend is a **Python server using FastAPI and Socket.IO**.
 
-![Screenshot](backend/Screenshot%202025-08-09%20152034.png)
+## Live Demo
+
+**[Click here to try the live application!](https://shub-8.github.io/Hand_Gesture_Recognition/)**
+
+*Note: The backend is hosted on a free Render instance, which may "spin down" after a period of inactivity. The first request might take 30-60 seconds to wake the server up.*
+
+![Screenshot](backend/TestSS.png)
 
 ## Features
 
