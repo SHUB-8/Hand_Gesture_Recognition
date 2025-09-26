@@ -8,7 +8,7 @@ import { Camera, CameraOff, RotateCcw } from 'lucide-react';
 import io from 'socket.io-client';
 import { HandTracker } from '../hand-tracker';
 
-const socket = io('https://hand-gesture-recognition-8ulh.onrender.com');
+const socket = io('http://localhost:8000');
 
 interface GestureResult {
   handType: 'left' | 'right' | 'both' | 'none';
