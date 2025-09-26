@@ -1,6 +1,14 @@
 import { HandLandmarker, FilesetResolver, DrawingUtils } from '@mediapipe/tasks-vision';
 
-// Feature extraction functions
+// --- Feature Extraction Logic ---
+// The following functions process the 3D hand landmarks from MediaPipe
+// into a flattened feature vector that can be fed into the classification model.
+
+/**
+ * Calculates the Euclidean distance between all pairs of landmarks.
+ * @param landmarks - An array of 3D landmarks from MediaPipe.
+ * @returns A 2D distance matrix.
+ */
 function calculateDistanceMatrix(landmarks: any[]) {
   const numLandmarks = landmarks.length;
   const distMatrix = Array(numLandmarks).fill(0).map(() => Array(numLandmarks).fill(0));
@@ -18,6 +26,12 @@ function calculateDistanceMatrix(landmarks: any[]) {
   return distMatrix;
 }
 
+/**
+ * Extracts the upper triangle of a matrix and flattens it into a 1D array.
+ * This is done to create a consistent feature vector from the symmetric distance matrix.
+ * @param matrix - A 2D square matrix.
+ * @returns A 1D array of the upper triangle values.
+ */
 function getUpperTriangle(matrix: number[][]) {
   const upperTriangle: number[] = [];
   for (let i = 0; i < matrix.length; i++) {
@@ -28,29 +42,36 @@ function getUpperTriangle(matrix: number[][]) {
   return upperTriangle;
 }
 
+/**
+ * Extracts a feature vector from a single hand's landmarks.
+ * @param landmarks - An array of 3D landmarks.
+ * @returns A flattened feature vector.
+ */
 function extractFeatures(landmarks: any[]) {
   const distMatrix = calculateDistanceMatrix(landmarks);
   return getUpperTriangle(distMatrix);
 }
 
+/**
+ * The HandTracker class encapsulates the MediaPipe HandLandmarker setup,
+ * video stream handling, and the real-time prediction loop.
+ */
 export class HandTracker {
   private handLandmarker: HandLandmarker | undefined;
-  private currentRunningMode: 'IMAGE' | 'VIDEO' = 'VIDEO'; // Track current mode
   private videoStream: MediaStream | undefined;
   private lastVideoTime = -1;
   private animationFrameId: number | undefined;
-  private drawingUtils: DrawingUtils | undefined;
   private canvasCtx: CanvasRenderingContext2D | null = null;
   private frameCounter = 0;
-  private frameSkip = 3; // Process every 3rd frame
+  private frameSkip = 4; // Process every 4th frame to balance performance and responsiveness.
 
-  constructor() {
-    // No initial handLandmarker creation here, it will be created on demand
-  }
-
-  private async createHandLandmarker(runningMode: 'IMAGE' | 'VIDEO') {
+  /**
+   * Initializes the HandLandmarker model from MediaPipe.
+   * This is an async operation that loads the model and WASM files.
+   */
+  private async createHandLandmarker() {
     if (this.handLandmarker) {
-      this.handLandmarker.close(); // Close existing instance if any
+      this.handLandmarker.close();
     }
     const vision = await FilesetResolver.forVisionTasks(
       'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm'
@@ -60,29 +81,35 @@ export class HandTracker {
         modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
         delegate: 'GPU',
       },
-      runningMode: runningMode,
+      runningMode: 'VIDEO',
       numHands: 2,
     });
-    this.currentRunningMode = runningMode;
   }
 
-  async start(videoElement: HTMLVideoElement, canvasElement: HTMLCanvasElement, callback: (features: number[], numHands: number) => void) {
-    if (this.currentRunningMode !== 'VIDEO' || !this.handLandmarker) {
-      await this.createHandLandmarker('VIDEO');
+  /**
+   * Starts the webcam, initializes the canvas, and begins the prediction loop.
+   * @param videoElement - The HTMLVideoElement to stream the webcam to.
+   * @param canvasElement - The HTMLCanvasElement for drawing landmarks.
+   * @param callback - A function to call with the extracted features, hand count, landmarks, and handedness.
+   */
+  async start(videoElement: HTMLVideoElement, canvasElement: HTMLCanvasElement, callback: (features: number[], numHands: number, landmarks: any[], handedness: any[]) => void) {
+    if (!this.handLandmarker) {
+      await this.createHandLandmarker();
     }
 
-    this.videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+    this.videoStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1080 } } });
     videoElement.srcObject = this.videoStream;
-    await videoElement.play(); // Ensure video playback
+    await videoElement.play();
 
     this.canvasCtx = canvasElement.getContext('2d');
-    this.drawingUtils = new DrawingUtils(this.canvasCtx!); // Initialize drawing utilities
-
-    videoElement.addEventListener('loadeddata', () => {
-      this.predictWebcam(videoElement, canvasElement, callback);
-    });
+    
+    // Start the prediction loop.
+    this.predictWebcam(videoElement, canvasElement, callback);
   }
 
+  /**
+   * Stops the webcam stream and cancels the prediction loop.
+   */
   stop() {
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
@@ -90,14 +117,14 @@ export class HandTracker {
     if (this.videoStream) {
       this.videoStream.getTracks().forEach(track => track.stop());
     }
-    if (this.handLandmarker) {
-      this.handLandmarker.close(); // Close the hand landmarker when stopping
-      this.handLandmarker = undefined;
-    }
   }
 
-  private predictWebcam = (videoElement: HTMLVideoElement, canvasElement: HTMLCanvasElement, callback: (features: number[], numHands: number) => void) => {
-    if (!this.handLandmarker || !this.canvasCtx || !this.drawingUtils) return;
+  /**
+   * The main prediction loop. It uses requestAnimationFrame to continuously
+   * process video frames.
+   */
+  private predictWebcam = (videoElement: HTMLVideoElement, canvasElement: HTMLCanvasElement, callback: (features: number[], numHands: number, landmarks: any[], handedness: any[]) => void) => {
+    if (!this.handLandmarker || !this.canvasCtx) return;
 
     const nowInMs = Date.now();
     if (videoElement.currentTime !== this.lastVideoTime) {
@@ -107,37 +134,49 @@ export class HandTracker {
       if (this.frameCounter % this.frameSkip === 0) {
         const handLandmarkerResult = this.handLandmarker.detectForVideo(videoElement, nowInMs);
 
-        // Clear canvas and draw video frame
         this.canvasCtx.save();
         this.canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-        this.canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-
+        
         if (handLandmarkerResult.landmarks && handLandmarkerResult.landmarks.length > 0) {
-          for (const landmarks of handLandmarkerResult.landmarks) {
-            this.drawingUtils.drawConnectors(landmarks, HandLandmarker.HAND_CONNECTIONS, { color: '#00FF00', lineWidth: 2.5 }); // Halved
-            this.drawingUtils.drawLandmarks(landmarks, { color: '#FF0000', lineWidth: 0.25 }); // Halved
-          }
+          // Note: Landmark drawing is disabled as per user request.
+          // To re-enable, uncomment the following lines and ensure a DrawingUtils instance is created.
+          // const drawingUtils = new DrawingUtils(this.canvasCtx);
+          // for (const landmarks of handLandmarkerResult.landmarks) {
+          //   drawingUtils.drawConnectors(landmarks, HandLandmarker.HAND_CONNECTIONS, { color: '#00FF00', lineWidth: 1 });
+          //   drawingUtils.drawLandmarks(landmarks, { color: '#FF0000', lineWidth: 0.1 });
+          // }
 
           if (handLandmarkerResult.landmarks.length === 1) {
             const features = extractFeatures(handLandmarkerResult.landmarks[0]);
-            callback(features, 1);
+            callback(features, 1, handLandmarkerResult.landmarks, handLandmarkerResult.handedness);
           } else {
             const features1 = extractFeatures(handLandmarkerResult.landmarks[0]);
             const features2 = extractFeatures(handLandmarkerResult.landmarks[1]);
             const combinedFeatures = [...features1, ...features2];
-            callback(combinedFeatures, 2);
+            callback(combinedFeatures, 2, handLandmarkerResult.landmarks, handLandmarkerResult.handedness);
           }
+        } else {
+          // If no hands are detected, send an empty array to clear the UI state.
+          callback([], 0, [], []);
         }
         this.canvasCtx.restore();
       }
     }
 
+    // Continue the loop.
     this.animationFrameId = requestAnimationFrame(() => this.predictWebcam(videoElement, canvasElement, callback));
   };
 
-  async detectImage(file: File): Promise<{features: number[], numHands: number} | undefined> {
-    if (this.currentRunningMode !== 'IMAGE' || !this.handLandmarker) {
-      await this.createHandLandmarker('IMAGE');
+  /**
+   * Detects hand landmarks from a single image file.
+   * @param file - The image file to process.
+   * @returns A promise that resolves with the features, hand count, and landmarks.
+   */
+  async detectImage(file: File): Promise<{features: number[], numHands: number, landmarks: any[]} | undefined> {
+    // Ensure the model is created and in IMAGE mode.
+    // Note: A separate createHandLandmarker call for 'IMAGE' mode might be needed if used concurrently.
+    if (!this.handLandmarker) {
+      await this.createHandLandmarker();
     }
 
     const image = new Image();
@@ -148,12 +187,12 @@ export class HandTracker {
         if (handLandmarkerResult.landmarks && handLandmarkerResult.landmarks.length > 0) {
           if (handLandmarkerResult.landmarks.length === 1) {
             const features = extractFeatures(handLandmarkerResult.landmarks[0]);
-            resolve({ features, numHands: 1 });
+            resolve({ features, numHands: 1, landmarks: handLandmarkerResult.landmarks });
           } else {
             const features1 = extractFeatures(handLandmarkerResult.landmarks[0]);
             const features2 = extractFeatures(handLandmarkerResult.landmarks[1]);
             const combinedFeatures = [...features1, ...features2];
-            resolve({ features: combinedFeatures, numHands: 2 });
+            resolve({ features: combinedFeatures, numHands: 2, landmarks: handLandmarkerResult.landmarks });
           }
         } else {
           resolve(undefined);

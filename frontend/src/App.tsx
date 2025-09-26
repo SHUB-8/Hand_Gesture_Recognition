@@ -1,120 +1,59 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Container, AppBar, Toolbar, Typography, Button, Grid, Paper } from '@mui/material';
-import io from 'socket.io-client';
-import { HandTracker } from './hand-tracker';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
+import { WebcamGestureRecognition } from "./components/WebcamGestureRecognition";
+import { ImageGestureRecognition } from "./components/ImageGestureRecognition";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card";
+import { Hand, Camera, Image } from "lucide-react";
 
-const socket = io('http://localhost:8000'); // Assuming backend is running on port 8000
-
-function App() {
-  const [prediction, setPrediction] = useState('');
-  const [imagePrediction, setImagePrediction] = useState('');
-  const [isRecognizing, setIsRecognizing] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const handTrackerRef = useRef<HandTracker | null>(null);
-
-  useEffect(() => {
-    socket.on('connect', () => {
-      console.log('Connected to backend');
-    });
-
-    socket.on('prediction', (data) => {
-      console.log('Received prediction:', data.prediction); // Log received prediction
-      setPrediction(data.prediction);
-    });
-
-    handTrackerRef.current = new HandTracker();
-
-    return () => {
-      socket.off('connect');
-      socket.off('prediction');
-      handTrackerRef.current?.stop();
-    };
-  }, []);
-
-  const startGestureRecognition = () => {
-    if (videoRef.current && canvasRef.current) {
-      videoRef.current.play(); // Ensure video playback
-      handTrackerRef.current?.start(videoRef.current, canvasRef.current, (features, numHands) => {
-        if (numHands === 1) {
-          socket.emit('features', features);
-        } else {
-          socket.emit('features_dual', features);
-        }
-      });
-      setIsRecognizing(true);
-    }
-  };
-
-  const stopGestureRecognition = () => {
-    handTrackerRef.current?.stop();
-    setIsRecognizing(false);
-  };
-
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && handTrackerRef.current) {
-      const result = await handTrackerRef.current.detectImage(file);
-      if (result) {
-        const { features, numHands } = result;
-        const response = await fetch(`http://localhost:8000/predict_image?num_hands=${numHands}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ features }),
-        });
-        const data = await response.json();
-        setImagePrediction(data.prediction);
-      }
-    }
-  };
-
+export default function App() {
   return (
-    <Container>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Hand Gesture Recognition
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <div className="flex items-center justify-center gap-3">
+            <Hand className="w-8 h-8 text-indigo-600" />
+            <h1 className="text-4xl font-bold text-gray-900">
+              Hand Gesture Recognition
+            </h1>
+          </div>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Advanced hand gesture recognition powered by MediaPipe. Analyze gestures in real-time 
+            through your webcam or upload images for detailed hand landmark analysis.
+          </p>
+        </div>
 
-      <Grid container spacing={3} sx={{ mt: 3 }}>
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h5" gutterBottom>
-              Real-time Recognition
-            </Typography>
-            <div style={{ position: 'relative', width: '100%', height: 'auto' }}>
-              <video ref={videoRef} style={{ width: '100%', height: 'auto' }} autoPlay playsInline muted></video>
-              <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}></canvas>
-            </div>
-            <Button variant="contained" onClick={startGestureRecognition} sx={{ mr: 1 }} disabled={isRecognizing}>
-              Start
-            </Button>
-            <Button variant="contained" onClick={stopGestureRecognition} color="secondary" disabled={!isRecognizing}>
-              Stop
-            </Button>
-            <Typography variant="h6" sx={{ mt: 2 }}>
-              Prediction: {prediction}
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h5" gutterBottom>
-              Recognize from Image
-            </Typography>
-            <input type="file" accept="image/*" onChange={handleImageUpload} />
-            <Typography variant="h6" sx={{ mt: 2 }}>
-              Prediction: {imagePrediction}
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
-    </Container>
+
+
+        {/* Main Application */}
+        <Tabs defaultValue="webcam" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
+            <TabsTrigger value="webcam" className="flex items-center gap-2">
+              <Camera className="w-4 h-4" />
+              Real-time
+            </TabsTrigger>
+            <TabsTrigger value="image" className="flex items-center gap-2">
+              <Image className="w-4 h-4" />
+              Image Upload
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="webcam">
+            <WebcamGestureRecognition />
+          </TabsContent>
+
+          <TabsContent value="image">
+            <ImageGestureRecognition />
+          </TabsContent>
+        </Tabs>
+
+        {/* Footer */}
+        <div className="text-center text-sm text-gray-500 border-t pt-6">
+          <p>
+            This demo simulates MediaPipe hand detection. In a production environment, 
+            integrate with actual MediaPipe libraries for real gesture recognition.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
-
-export default App;
