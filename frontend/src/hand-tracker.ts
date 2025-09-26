@@ -57,31 +57,41 @@ function extractFeatures(landmarks: any[]) {
  * video stream handling, and the real-time prediction loop.
  */
 export class HandTracker {
-  private handLandmarker: HandLandmarker | undefined;
+  private handLandmarkerVideo: HandLandmarker | undefined;
+  private handLandmarkerImage: HandLandmarker | undefined;
   private videoStream: MediaStream | undefined;
   private lastVideoTime = -1;
   private animationFrameId: number | undefined;
   private canvasCtx: CanvasRenderingContext2D | null = null;
   private frameCounter = 0;
-  private frameSkip = 4; // Process every 4th frame to balance performance and responsiveness.
+  private frameSkip = 1; // Process every frame for maximum responsiveness.
 
   /**
-   * Initializes the HandLandmarker model from MediaPipe.
-   * This is an async operation that loads the model and WASM files.
+   * Initializes both the video and image HandLandmarker models from MediaPipe.
+   * This is an async operation that should be called once.
    */
-  private async createHandLandmarker() {
-    if (this.handLandmarker) {
-      this.handLandmarker.close();
-    }
+  async initialize() {
     const vision = await FilesetResolver.forVisionTasks(
       'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm'
     );
-    this.handLandmarker = await HandLandmarker.createFromOptions(vision, {
+    
+    // Create the landmarker for video processing
+    this.handLandmarkerVideo = await HandLandmarker.createFromOptions(vision, {
       baseOptions: {
         modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
         delegate: 'GPU',
       },
       runningMode: 'VIDEO',
+      numHands: 2,
+    });
+
+    // Create the landmarker for image processing
+    this.handLandmarkerImage = await HandLandmarker.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
+        delegate: 'GPU',
+      },
+      runningMode: 'IMAGE',
       numHands: 2,
     });
   }
@@ -93,8 +103,9 @@ export class HandTracker {
    * @param callback - A function to call with the extracted features, hand count, landmarks, and handedness.
    */
   async start(videoElement: HTMLVideoElement, canvasElement: HTMLCanvasElement, callback: (features: number[], numHands: number, landmarks: any[], handedness: any[]) => void) {
-    if (!this.handLandmarker) {
-      await this.createHandLandmarker();
+    if (!this.handLandmarkerVideo) {
+      console.error("HandTracker not initialized. Call initialize() first.");
+      return;
     }
 
     this.videoStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1080 } } });
@@ -124,7 +135,7 @@ export class HandTracker {
    * process video frames.
    */
   private predictWebcam = (videoElement: HTMLVideoElement, canvasElement: HTMLCanvasElement, callback: (features: number[], numHands: number, landmarks: any[], handedness: any[]) => void) => {
-    if (!this.handLandmarker || !this.canvasCtx) return;
+    if (!this.handLandmarkerVideo || !this.canvasCtx) return;
 
     const nowInMs = Date.now();
     if (videoElement.currentTime !== this.lastVideoTime) {
@@ -132,20 +143,14 @@ export class HandTracker {
 
       this.frameCounter++;
       if (this.frameCounter % this.frameSkip === 0) {
-        const handLandmarkerResult = this.handLandmarker.detectForVideo(videoElement, nowInMs);
+        const handLandmarkerResult = this.handLandmarkerVideo.detectForVideo(videoElement, nowInMs);
 
         this.canvasCtx.save();
         this.canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
         
         if (handLandmarkerResult.landmarks && handLandmarkerResult.landmarks.length > 0) {
           // Note: Landmark drawing is disabled as per user request.
-          // To re-enable, uncomment the following lines and ensure a DrawingUtils instance is created.
-          // const drawingUtils = new DrawingUtils(this.canvasCtx);
-          // for (const landmarks of handLandmarkerResult.landmarks) {
-          //   drawingUtils.drawConnectors(landmarks, HandLandmarker.HAND_CONNECTIONS, { color: '#00FF00', lineWidth: 1 });
-          //   drawingUtils.drawLandmarks(landmarks, { color: '#FF0000', lineWidth: 0.1 });
-          // }
-
+          
           if (handLandmarkerResult.landmarks.length === 1) {
             const features = extractFeatures(handLandmarkerResult.landmarks[0]);
             callback(features, 1, handLandmarkerResult.landmarks, handLandmarkerResult.handedness);
@@ -169,21 +174,20 @@ export class HandTracker {
 
   /**
    * Detects hand landmarks from a single image file.
-   * @param file - The image file to process.
+   * @param file - The image file to process.+
    * @returns A promise that resolves with the features, hand count, and landmarks.
    */
   async detectImage(file: File): Promise<{features: number[], numHands: number, landmarks: any[]} | undefined> {
-    // Ensure the model is created and in IMAGE mode.
-    // Note: A separate createHandLandmarker call for 'IMAGE' mode might be needed if used concurrently.
-    if (!this.handLandmarker) {
-      await this.createHandLandmarker();
+    if (!this.handLandmarkerImage) {
+      console.error("HandTracker not initialized. Call initialize() first.");
+      return;
     }
 
     const image = new Image();
     image.src = URL.createObjectURL(file);
     return new Promise((resolve) => {
       image.onload = () => {
-        const handLandmarkerResult = this.handLandmarker!.detect(image);
+        const handLandmarkerResult = this.handLandmarkerImage!.detect(image);
         if (handLandmarkerResult.landmarks && handLandmarkerResult.landmarks.length > 0) {
           if (handLandmarkerResult.landmarks.length === 1) {
             const features = extractFeatures(handLandmarkerResult.landmarks[0]);

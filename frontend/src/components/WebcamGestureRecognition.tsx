@@ -35,27 +35,34 @@ export function WebcamGestureRecognition() {
   const videoHeight = 480;
 
   useEffect(() => {
-    try {
-      console.log('Loading hand-tracker.ts');
-      handTrackerRef.current = new HandTracker();
-      console.log('hand-tracker.ts loaded successfully');
+    const init = async () => {
+      try {
+        console.log('Initializing hand-tracker.ts');
+        handTrackerRef.current = new HandTracker();
+        await handTrackerRef.current.initialize();
+        console.log('hand-tracker.ts initialized successfully');
 
-          socket.on('prediction', (data: { prediction: string; confidence: number; hand?: 'left' | 'right'; hands?: ('left' | 'right')[] }) => {
-            setResults(prevResults => ({
-              ...prevResults,
-              gesture: data.prediction,
-              confidence: data.confidence,
-              handType: data.hand || (data.hands ? 'both' : 'none'),
-            }));
-          });
-      return () => {
-        socket.off('prediction');
-        handTrackerRef.current?.stop();
-      };
-    } catch (error) {
-      console.error('Error in useEffect:', error);
-      setError('An unexpected error occurred. Please try again.');
-    }
+    socket.on('prediction', (data: { prediction: string; confidence: number; hand?: 'left' | 'right'; hands?: ('left' | 'right')[] }) => {
+      // If confidence is low, explicitly set the gesture to "Unknown".
+      const finalGesture = data.confidence > 0.80 ? data.prediction : "Unknown";
+      
+      setResults(prevResults => ({
+        ...prevResults,
+        gesture: finalGesture,
+        confidence: data.confidence,
+        handType: data.hand || (data.hands ? 'both' : 'none'),
+      }));
+    });      } catch (error) {
+        console.error('Error in useEffect:', error);
+        setError('An unexpected error occurred. Please try again.');
+      }
+    };
+    init();
+
+    return () => {
+      socket.off('prediction');
+      handTrackerRef.current?.stop();
+    };
   }, []);
 
   const startCamera = useCallback(async () => {

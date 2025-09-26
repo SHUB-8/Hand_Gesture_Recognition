@@ -34,7 +34,11 @@ export function ImageGestureRecognition() {
 
   // Initialize the HandTracker when the component mounts.
   useEffect(() => {
-    handTrackerRef.current = new HandTracker();
+    const init = async () => {
+      handTrackerRef.current = new HandTracker();
+      await handTrackerRef.current.initialize();
+    };
+    init();
   }, []);
 
   // Callback function to handle the image upload and prediction process.
@@ -94,10 +98,12 @@ export function ImageGestureRecognition() {
             });
             const data = await response.json();
             
-            // Update the results state with the prediction from the backend.
+            // Only accept the prediction if confidence is high enough.
+            const finalGesture = data.confidence > 0.80 ? data.prediction : "Unknown";
+
             setResults({ 
-              handType: numHands === 1 ? 'right' : 'both', // Note: Handedness is not determined for images yet.
-              gesture: data.prediction, 
+              handType: numHands === 1 ? 'right' : 'both', 
+              gesture: finalGesture, 
               confidence: data.confidence, 
               landmarks 
             });
