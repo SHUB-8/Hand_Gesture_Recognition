@@ -1,5 +1,6 @@
 fastapi
-uvicorn[standard]
+uvicorn
+websockets
 python-socketio
 numpy
 tensorflow

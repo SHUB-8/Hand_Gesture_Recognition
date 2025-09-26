@@ -87,7 +87,7 @@ export function ImageGestureRecognition() {
             const { features, numHands, landmarks } = result;
             
             // Send the extracted features to the backend for prediction.
-            const response = await fetch(`http://localhost:8000/predict_image?num_hands=${numHands}`, {
+            const response = await fetch(`https://hand-gesture-recognition-8ulh.onrender.com/predict_image?num_hands=${numHands}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ features }),

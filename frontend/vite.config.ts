@@ -4,6 +4,7 @@
   import path from 'path';
 
   export default defineConfig({
+  base: '/Hand_Gesture_Recognition/', // <-- IMPORTANT: Replace <your-repo-name> with your repo name
   plugins: [react()],
   build: {
     outDir: 'build',
